@@ -1,0 +1,48 @@
+batch_size: 512
+epochs: 1
+warm_up: 10
+eval_every_n_epochs: 1
+fine_tune_from: None
+log_every_n_steps: 50
+# lr : 0.00229
+lr: 5e-4
+# weight_decay: 10e-6
+weight_decay: 1e-3
+precision: 32
+log_dir: './experiment_logs'
+debug: False
+
+model:
+  out_dim: 16
+  base_model: "xresnet1d50"
+  hidden: True
+  widen: 1.0
+
+loss:
+  temperature: 0.5
+  use_cosine_similarity: True
+
+dataset:
+  num_workers: 2
+  data_path: "./data/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0"
+  signal_fs: 100
+  train_records: ['104001', '105001', '115001', '118001', '121001', '125001', '126001']
+  val_records: ['103001', '103002', '103003', '111001', '113001', '123001']
+  test_records: ['100001', '100002', '114001', '122001', '124001']
+
+# linear eval / fine-tuning
+eval_epochs: 5
+# eval_epochs: 50
+eval_every: 15
+# eval_every: 200
+eval_batch_size: 512
+lin_eval_every_n_epochs: 1
+eval_lr: 5e-3
+eval_wd: 1e-3
+perform_lin_eval: True
+perform_fine_tuning: True
+eval_mode: "fine_tuning"
+eval_gradual_freezing: False
+
+
+  

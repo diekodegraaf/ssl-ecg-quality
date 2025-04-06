@@ -1,0 +1,13 @@
+# Ignore the data folder
+data/
+
+# Ignore the experiment_logs folder
+experiment_logs/
+
+# Ignore Python cache files
+__pycache__/
+
+# Ignore the profiler.txt file
+fit-simple_profiler2.txt.txt
+fit-simple_profiler3.txt.txt
+simple_profiler.txt

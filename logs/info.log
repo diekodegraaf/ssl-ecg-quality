@@ -1,0 +1,5 @@
+2025-03-31 19:05:43,751 __main__:123 INFO:  0. Transformation: ToTensor: {'transpose_data': False, 'transpose_label': False}  
+2025-03-31 19:05:43,753 __main__:123 INFO:  1. Transformation: GaussianNoise: {'scale': 0.005}  
+2025-03-31 19:05:43,754 __main__:123 INFO:  2. Transformation: ChannelResize: {'magnitude_range': [0.5, 2]}  
+2025-03-31 19:05:43,755 __main__:123 INFO:  3. Transformation: RandomResizedCrop: {'crop_ratio_range': [0.5, 1.0], 'output_size': 250}  
+2025-03-31 19:05:43,757 __main__:123 INFO:  4. Transformation: Transpose: {}  
