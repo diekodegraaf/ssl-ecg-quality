@@ -923,21 +923,6 @@ def parse_args(parent_parser):
     return parser
 
 def init_logger(config):
-    level = logging.INFO
-
-    if config['debug']:
-        level = logging.DEBUG
-
-    # remove all handlers to change basic configuration
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
-    if not os.path.isdir(config['log_dir']):
-        os.mkdir(config['log_dir'])
-    logging.basicConfig(filename=os.path.join(config['log_dir'], 'info.log'), level=level,
-                        format='%(asctime)s %(name)s:%(lineno)s %(levelname)s:  %(message)s  ')
-    return logging.getLogger(__name__)
-
-def init_logger(config):
     level = logging.DEBUG if config.get('debug', False) else logging.INFO
     log_dir = config.get('log_dir', './experiment_logs')
 
