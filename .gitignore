@@ -7,6 +7,9 @@ experiment_logs/
 # Ignore Python cache files
 __pycache__/
 
+# Ignore slurm outputs
+job_outputs/
+
 # Ignore the profiler.txt file
 fit-simple_profiler2.txt.txt
 fit-simple_profiler3.txt.txt

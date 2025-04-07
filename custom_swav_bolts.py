@@ -611,6 +611,9 @@ class CustomSwAV(pl.LightningModule):
         self.log('train_loss', loss, on_step=True, on_epoch=False)
         return loss
 
+    def on_validation_epoch_start(self):
+        self.val_losses = []
+        
     def validation_step(self, batch, batch_idx, dataloader_idx):
         # skip the supervised validation loaders
         if dataloader_idx != 0:
@@ -618,21 +621,23 @@ class CustomSwAV(pl.LightningModule):
         loss = self.shared_step(batch)
 
         # self.log('val_loss', loss, on_step=False, on_epoch=True)
-        results = {
-            'val_loss': loss,
-        }
-        return results
-    
-    def validation_epoch_end(self, outputs):
-        # outputs[0] because we are using multiple datasets!
-        val_loss = mean(outputs[0], 'val_loss')
+        self.val_losses.append(loss)
 
-        self.log('val_loss', val_loss, on_epoch=True, prog_bar=True)
-        
-        log = {
-            'val_loss': val_loss,
-        }
-        return log #{'val_loss': val_loss, 'log': log, 'progress_bar': log}
+        return {'val_loss': loss}
+    
+    def on_validation_epoch_end(self):
+        if len(self.val_losses) > 0:
+            # convert list of tensors to tensor and take mean
+            val_loss = torch.stack(self.val_losses).mean()
+            self.log('val_loss', val_loss, on_epoch=True, prog_bar=True)
+
+        # outputs[0] because we are using multiple datasets!
+        # val_loss = mean(outputs[0], 'val_loss')
+        # self.log('val_loss', val_loss, on_epoch=True, prog_bar=True)
+        # log = {
+        #     'val_loss': val_loss,
+        # }
+        return {'val_loss': val_loss} #{'val_loss': val_loss, 'log': log, 'progress_bar': log}
     
 
     def exclude_from_wt_decay(self, named_params, weight_decay, skip_list=['bias', 'bn']):
@@ -684,27 +689,32 @@ class CustomSwAV(pl.LightningModule):
 
         return optimizer
     
-    def optimizer_step(
-        self,
-        epoch: int = None,
-        batch_idx: int = None,
-        optimizer: Optimizer = None,
-        optimizer_idx: int = None,
-        optimizer_closure: Optional[Callable] = None,
-        on_tpu: bool = None,
-        using_native_amp: bool = None,
-        using_lbfgs: bool = None,
-    ) -> None:
-        # warm-up + decay schedule placed here since LARSWrapper is not optimizer class
-        # adjust LR of optim contained within LARSWrapper
-        for param_group in optimizer.param_groups:
-            param_group["lr"] = self.lr_schedule[self.trainer.global_step]
+    # def optimizer_step(
+    #     self,
+    #     epoch: int = None,
+    #     batch_idx: int = None,
+    #     optimizer: Optimizer = None,
+    #     optimizer_idx: int = None,
+    #     optimizer_closure: Optional[Callable] = None,
+    #     on_tpu: bool = None,
+    #     using_native_amp: bool = None,
+    #     using_lbfgs: bool = None,
+    # ) -> None:
+    #     # warm-up + decay schedule placed here since LARSWrapper is not optimizer class
+    #     # adjust LR of optim contained within LARSWrapper
+    #     for param_group in optimizer.param_groups:
+    #         param_group["lr"] = self.lr_schedule[self.trainer.global_step]
 
-        # from lightning
-        if not isinstance(optimizer, LightningOptimizer):
-            # wraps into LightingOptimizer only for running step
-            optimizer = LightningOptimizer.to_lightning_optimizer(optimizer, self.trainer)
-        optimizer.step(closure=optimizer_closure)
+    #     # from lightning
+    #     if not isinstance(optimizer, LightningOptimizer):
+    #         # wraps into LightingOptimizer only for running step
+    #         optimizer = LightningOptimizer.to_lightning_optimizer(optimizer, self.trainer)
+        
+    #     # execute the closure to compute loss and gradients.
+    #     if optimizer_closure is not None:
+    #         loss = optimizer_closure()
+        
+    #     optimizer.step()
         
     def sinkhorn(self, Q, nmb_iters):
         with torch.no_grad():
@@ -1075,10 +1085,19 @@ def cli_main():
         filename='best_pretrained_swav_{epoch}-{val_loss:.4f}'
     )
     callbacks.append(checkpoint_callback)
-    
+    # convert gpus argument to devices
+    if args.gpus > 0:
+        accelerator = 'gpu'
+        devices = args.gpus
+        strategy= 'ddp'
+    else:
+        accelerator = 'cpu'
+        devices = 1
+        strategy = None
+
     # configure trainer
-    trainer = Trainer(logger=tb_logger, max_epochs=config["epochs"], gpus=args.gpus,
-                      strategy=args.distributed_backend, auto_lr_find=False, num_nodes=args.num_nodes, precision=config["precision"], callbacks=callbacks)
+    trainer = Trainer(logger=tb_logger, max_epochs=config["epochs"], accelerator=accelerator, devices=devices,
+                      num_nodes=args.num_nodes, precision=config["precision"], callbacks=callbacks)
     # trainer = Trainer(logger=tb_logger, max_epochs=config["epochs"], gpus=args.gpus,
     #                 distributed_backend=args.distributed_backend, auto_lr_find=False, num_nodes=args.num_nodes, precision=config["precision"], callbacks=callbacks)
 

@@ -277,7 +277,9 @@ class TDynamicTimeWarp(Transformation):
         - w: Number of segments to divide the signal into. 
         - r: Percentage to stretch (positive) or squeeze (negative) the segments.
         """
-        super(DynamicTimeWarp, self).__init__(w=w, r=r)
+        super(TDynamicTimeWarp, self).__init__(w=w, r=r)
+        self.w = w
+        self.r = r
 
     def __call__(self, sample):
         data, label = sample
