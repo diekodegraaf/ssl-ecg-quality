@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#SBATCH --partition=gpu_mig
+#SBATCH --partition=gpu_a100
 #SBATCH --gpus=1
 #SBATCH --job-name=MinimalRunSwAV
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=9
+#SBATCH --cpus-per-task=4
 #SBATCH --time=01:00:00
 #SBATCH --output=job_outputs/slurm_output_%A.out
 
@@ -15,4 +15,4 @@ module load Anaconda3/2024.06-1
 cd $HOME/ssl-ecg-quality/
 source activate ecg
 
-srun python -u custom_swav_bolts.py --batch_size 512 --epochs 1 --precision 16 --trafos RandomResizedCrop --log_dir=experiment_logs --gpus=1
+srun python -u custom_swav_bolts.py --batch_size 512 --epochs 1 --precision 16 --trafos RandomResizedCrop --log_dir=experiment_logs --gpus=2

@@ -1,0 +1,152 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Channels:
+ - pytorch
+ - nvidia
+ - conda-forge
+ - defaults
+Platform: linux-64
+Collecting package metadata (repodata.json): ...working... done
+Solving environment: ...working... failed
+Channels:
+ - pytorch
+ - nvidia
+ - conda-forge
+ - defaults
+Platform: linux-64
+Collecting package metadata (repodata.json): ...working... done
+Solving environment: ...working... failed
+
+LibMambaUnsatisfiableError: Encountered problems while solving:
+  - nothing provides requested zstd ==1.5.6 h0ea2cb4_0
+  - nothing provides requested zstandard ==0.23.0 py312h7606c53_1
+  - nothing provides requested yaml ==0.2.5 h8ffe710_2
+  - nothing provides requested xz ==5.2.6 h8d14728_0
+  - nothing provides requested xorg-libxdmcp ==1.1.5 h0e40799_0
+  - nothing provides requested xorg-libxau ==1.0.11 h0e40799_1
+  - nothing provides __win needed by win_inet_pton-1.1.0-pyh7428d3b_7
+  - nothing provides requested vs2015_runtime ==14.40.33810 h3bf8584_22
+  - nothing provides requested vc14_runtime ==14.40.33810 hcc2c482_22
+  - nothing provides requested vc ==14.3 h8a93ad2_22
+  - nothing provides requested ucrt ==10.0.22621.0 h57928b3_1
+  - nothing provides requested tk ==8.6.13 h5226925_1
+  - nothing provides requested tbb ==2021.7.0 h91493d7_0
+  - nothing provides requested pyyaml ==6.0.2 py312h4389bb4_1
+  - nothing provides requested pytorch-cuda ==12.4 h3fd98bf_7
+  - nothing provides requested pytorch ==2.4.1 py3.12_cuda12.4_cudnn9_0
+  - nothing provides requested python ==3.12.4 h889d299_0_cpython
+  - nothing provides __win needed by pysocks-1.7.1-pyh0701188_6
+  - nothing provides requested pthread-stubs ==0.4 h0e40799_1002
+  - nothing provides requested pillow ==11.0.0 py312ha41cd45_0
+  - nothing provides requested openssl ==3.3.2 h2466b09_0
+  - nothing provides requested openjpeg ==2.5.2 h3d672ee_0
+  - nothing provides requested mkl_random ==1.2.7 py312h0158946_0
+  - nothing provides requested mkl_fft ==1.3.10 py312h827c3e9_0
+  - nothing provides requested mkl-service ==2.4.0 py312h2bbff1b_1
+  - nothing provides requested mkl ==2023.1.0 h6a75c08_48682
+  - nothing provides requested markupsafe ==3.0.2 py312h31fea79_0
+  - nothing provides requested libzlib ==1.3.1 h2466b09_2
+  - nothing provides requested libxcb ==1.17.0 h0e4246c_0
+  - nothing provides requested libwinpthread ==12.0.0.r4.gg4f2fc60ca h57928b3_8
+  - nothing provides requested libwebp-base ==1.4.0 hcfcfb64_0
+  - nothing provides requested libuv ==1.49.2 h2466b09_0
+  - nothing provides requested libtiff ==4.7.0 hfc51747_1
+  - nothing provides requested libsqlite ==3.46.1 h2466b09_0
+  - nothing provides requested libpng ==1.6.44 h3ca93ac_0
+  - nothing provides requested libjpeg-turbo ==3.0.0 hcfcfb64_1
+  - nothing provides requested libgomp ==14.2.0 h1383e82_1
+  - nothing provides requested libgcc ==14.2.0 h1383e82_1
+  - nothing provides requested libffi ==3.4.2 h8ffe710_5
+  - nothing provides requested libexpat ==2.6.3 he0c23c2_0
+  - nothing provides requested libdeflate ==1.22 h2466b09_0
+  - nothing provides requested lerc ==4.0.0 h63175ca_0
+  - nothing provides requested lcms2 ==2.16 h67d730c_0
+  - nothing provides requested intel-openmp ==2024.2.1 h57928b3_1083
+  - nothing provides requested freetype ==2.12.1 hdaf720e_2
+  - nothing provides requested cffi ==1.17.1 py312h4389bb4_0
+  - nothing provides requested ca-certificates ==2024.8.30 h56e8100_0
+  - nothing provides requested bzip2 ==1.0.8 h2466b09_7
+  - nothing provides requested brotli-python ==1.1.0 py312h275cf98_2
+
+Could not solve for environment specs
+The following packages are incompatible
+├─ brotli-python ==1.1.0 py312h275cf98_2 does not exist (perhaps a typo or a missing channel);
+├─ bzip2 ==1.0.8 h2466b09_7 does not exist (perhaps a typo or a missing channel);
+├─ ca-certificates ==2024.8.30 h56e8100_0 does not exist (perhaps a typo or a missing channel);
+├─ cffi ==1.17.1 py312h4389bb4_0 does not exist (perhaps a typo or a missing channel);
+├─ freetype ==2.12.1 hdaf720e_2 does not exist (perhaps a typo or a missing channel);
+├─ intel-openmp ==2024.2.1 h57928b3_1083 does not exist (perhaps a typo or a missing channel);
+├─ lcms2 ==2.16 h67d730c_0 does not exist (perhaps a typo or a missing channel);
+├─ lerc ==4.0.0 h63175ca_0 does not exist (perhaps a typo or a missing channel);
+├─ libdeflate ==1.22 h2466b09_0 does not exist (perhaps a typo or a missing channel);
+├─ libexpat ==2.6.3 he0c23c2_0 does not exist (perhaps a typo or a missing channel);
+├─ libffi ==3.4.2 h8ffe710_5 does not exist (perhaps a typo or a missing channel);
+├─ libgcc ==14.2.0 h1383e82_1 does not exist (perhaps a typo or a missing channel);
+├─ libgomp ==14.2.0 h1383e82_1 does not exist (perhaps a typo or a missing channel);
+├─ libjpeg-turbo ==3.0.0 hcfcfb64_1 does not exist (perhaps a typo or a missing channel);
+├─ libpng ==1.6.44 h3ca93ac_0 does not exist (perhaps a typo or a missing channel);
+├─ libsqlite ==3.46.1 h2466b09_0 does not exist (perhaps a typo or a missing channel);
+├─ libtiff ==4.7.0 hfc51747_1 does not exist (perhaps a typo or a missing channel);
+├─ libuv ==1.49.2 h2466b09_0 does not exist (perhaps a typo or a missing channel);
+├─ libwebp-base ==1.4.0 hcfcfb64_0 does not exist (perhaps a typo or a missing channel);
+├─ libwinpthread ==12.0.0.r4.gg4f2fc60ca h57928b3_8 does not exist (perhaps a typo or a missing channel);
+├─ libxcb ==1.17.0 h0e4246c_0 does not exist (perhaps a typo or a missing channel);
+├─ libzlib ==1.3.1 h2466b09_2 does not exist (perhaps a typo or a missing channel);
+├─ markupsafe ==3.0.2 py312h31fea79_0 does not exist (perhaps a typo or a missing channel);
+├─ mkl-service ==2.4.0 py312h2bbff1b_1 does not exist (perhaps a typo or a missing channel);
+├─ mkl ==2023.1.0 h6a75c08_48682 does not exist (perhaps a typo or a missing channel);
+├─ mkl_fft ==1.3.10 py312h827c3e9_0 does not exist (perhaps a typo or a missing channel);
+├─ mkl_random ==1.2.7 py312h0158946_0 does not exist (perhaps a typo or a missing channel);
+├─ openjpeg ==2.5.2 h3d672ee_0 does not exist (perhaps a typo or a missing channel);
+├─ openssl ==3.3.2 h2466b09_0 does not exist (perhaps a typo or a missing channel);
+├─ pillow ==11.0.0 py312ha41cd45_0 does not exist (perhaps a typo or a missing channel);
+├─ pthread-stubs ==0.4 h0e40799_1002 does not exist (perhaps a typo or a missing channel);
+├─ pysocks ==1.7.1 pyh0701188_6 is not installable because it requires
+│  └─ __win, which is missing on the system;
+├─ python ==3.12.4 h889d299_0_cpython does not exist (perhaps a typo or a missing channel);
+├─ pytorch-cuda ==12.4 h3fd98bf_7 does not exist (perhaps a typo or a missing channel);
+├─ pytorch ==2.4.1 py3.12_cuda12.4_cudnn9_0 does not exist (perhaps a typo or a missing channel);
+├─ pyyaml ==6.0.2 py312h4389bb4_1 does not exist (perhaps a typo or a missing channel);
+├─ tbb ==2021.7.0 h91493d7_0 does not exist (perhaps a typo or a missing channel);
+├─ tk ==8.6.13 h5226925_1 does not exist (perhaps a typo or a missing channel);
+├─ ucrt ==10.0.22621.0 h57928b3_1 does not exist (perhaps a typo or a missing channel);
+├─ vc14_runtime ==14.40.33810 hcc2c482_22 does not exist (perhaps a typo or a missing channel);
+├─ vc ==14.3 h8a93ad2_22 does not exist (perhaps a typo or a missing channel);
+├─ vs2015_runtime ==14.40.33810 h3bf8584_22 does not exist (perhaps a typo or a missing channel);
+├─ win_inet_pton ==1.1.0 pyh7428d3b_7 is not installable because it requires
+│  └─ __win, which is missing on the system;
+├─ xorg-libxau ==1.0.11 h0e40799_1 does not exist (perhaps a typo or a missing channel);
+├─ xorg-libxdmcp ==1.1.5 h0e40799_0 does not exist (perhaps a typo or a missing channel);
+├─ xz ==5.2.6 h8d14728_0 does not exist (perhaps a typo or a missing channel);
+├─ yaml ==0.2.5 h8ffe710_2 does not exist (perhaps a typo or a missing channel);
+├─ zstandard ==0.23.0 py312h7606c53_1 does not exist (perhaps a typo or a missing channel);
+└─ zstd ==1.5.6 h0ea2cb4_0 does not exist (perhaps a typo or a missing channel).
+
+
+JOB STATISTICS
+==============
+Job ID: 11006521
+Cluster: snellius
+User/Group: ddgraaf/ddgraaf
+State: RUNNING
+Nodes: 1
+Cores per node: 9
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:10:12 core-walltime
+Job Wall-clock time: 00:01:08
+Memory Utilized: 0.00 MB
+Memory Efficiency: 0.00% of 60.00 GB (60.00 GB/node)
+WARNING: Efficiency statistics can only be obtained after the job has ended as seff tool is based on the accounting database data.

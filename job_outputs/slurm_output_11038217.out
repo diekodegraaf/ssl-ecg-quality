@@ -1,0 +1,72 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+{'batch_size': 512, 'epochs': 1, 'warm_up': 1, 'eval_every_n_epochs': 1, 'fine_tune_from': 'None', 'log_every_n_steps': 50, 'lr': '5e-4', 'weight_decay': '1e-3', 'precision': 16, 'log_dir': 'experiment_logs/07-04-2025-11-34_swav_RRC_crop_ratio_range=[0.5, 1.0]_output_size=250', 'debug': False, 'model': {'out_dim': 16, 'base_model': 'xresnet1d50', 'hidden': True, 'widen': 1.0}, 'loss': {'temperature': 0.5, 'use_cosine_similarity': True}, 'dataset': {'num_workers': 2, 'data_path': './data/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0', 'signal_fs': 100, 'train_records': ['104001', '105001', '115001', '118001', '121001', '125001', '126001'], 'val_records': ['103001', '103002', '103003', '111001', '113001', '123001'], 'test_records': ['100001', '100002', '114001', '122001', '124001'], 'swav': True, 'num_crops': 7}, 'eval_epochs': 5, 'eval_every': 15, 'eval_batch_size': 512, 'lin_eval_every_n_epochs': 1, 'eval_lr': '5e-3', 'eval_wd': '1e-3', 'perform_lin_eval': True, 'perform_fine_tuning': True, 'eval_mode': 'fine_tuning', 'eval_gradual_freezing': False, 'epsilon': 10, 'resume': False, 'trafos': ['RandomResizedCrop'], 'to_crop_ratio_range': [0.2, 0.4], 'downsample_ratio': 0.2, 'num_nodes': 1, 'checkpoint_path': '', 'base_model': None, 'widen': None, 'distributed_backend': None, 'filter_cinc': False, 'warps': 3, 'magnitude_range': [0.5, 2], 'rr_crop_ratio_range': [0.5, 1.0], 'gaussian_scale': 0.01, 'run_callbacks': False, 'output_size': 250, 'out_dim': None, 'radius': 10, 'gpus': 1, 'percentage': 1.0, 'data_path': None}
+Traceback (most recent call last):
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/custom_swav_bolts.py", line 1104, in <module>
+    cli_main()
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/custom_swav_bolts.py", line 1042, in cli_main
+    ecg_datamodule = ECGDataModule(config, transformations, t_params)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/ecg_datamodule.py", line 31, in __init__
+    self.set_params()
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/ecg_datamodule.py", line 36, in set_params
+    train_loader, valid_loader = dataset.get_data_loaders() 
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/clinical_ts/simclr_dataset_wrapper.py", line 101, in get_data_loaders
+    train_ds, val_ds = self._get_datasets(transforms=wrapper_transform)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/clinical_ts/simclr_dataset_wrapper.py", line 111, in _get_datasets
+    train_ds = TrainDataset(self.data_path, self.train_records, self.window_size, self.signal_fs, transforms=transforms, stride=None, mode='random')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/butqdb_dataloaders.py", line 37, in __init__
+    r = wfdb.rdrecord(record_path, channels=[0])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ddgraaf/.conda/envs/ecg/lib/python3.12/site-packages/wfdb/io/record.py", line 2051, in rdrecord
+    record = rdheader(record_name, pn_dir=pn_dir, rd_segments=False)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ddgraaf/.conda/envs/ecg/lib/python3.12/site-packages/wfdb/io/record.py", line 1855, in rdheader
+    with fsspec.open(
+         ^^^^^^^^^^^^
+  File "/home/ddgraaf/.conda/envs/ecg/lib/python3.12/site-packages/fsspec/core.py", line 105, in __enter__
+    f = self.fs.open(self.path, mode=mode)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ddgraaf/.conda/envs/ecg/lib/python3.12/site-packages/fsspec/spec.py", line 1310, in open
+    f = self._open(
+        ^^^^^^^^^^^
+  File "/home/ddgraaf/.conda/envs/ecg/lib/python3.12/site-packages/fsspec/implementations/local.py", line 201, in _open
+    return LocalFileOpener(path, mode, fs=self, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ddgraaf/.conda/envs/ecg/lib/python3.12/site-packages/fsspec/implementations/local.py", line 365, in __init__
+    self._open()
+  File "/home/ddgraaf/.conda/envs/ecg/lib/python3.12/site-packages/fsspec/implementations/local.py", line 370, in _open
+    self.f = open(self.path, mode=self.mode)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/gpfs/home1/ddgraaf/ssl-ecg-quality/data/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0/104001/104001_ECG_new.hea'
+srun: error: srv10: task 0: Exited with exit code 1
+srun: Terminating StepId=11038217.0
+
+JOB STATISTICS
+==============
+Job ID: 11038217
+Cluster: snellius
+User/Group: ddgraaf/ddgraaf
+State: FAILED (exit code 1)
+Cores: 1
+CPU Utilized: 00:00:05
+CPU Efficiency: 35.71% of 00:00:14 core-walltime
+Job Wall-clock time: 00:00:14
+Memory Utilized: 1.26 MB
+Memory Efficiency: 0.02% of 7.00 GB (7.00 GB/core)

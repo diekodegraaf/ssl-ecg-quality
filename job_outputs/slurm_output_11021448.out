@@ -1,0 +1,14 @@
+
+JOB STATISTICS
+==============
+Job ID: 11021448
+Cluster: snellius
+User/Group: ddgraaf/ddgraaf
+State: NODE_FAIL (exit code 1)
+Nodes: 1
+Cores per node: 9
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:08:51 core-walltime
+Job Wall-clock time: 00:00:59
+Memory Utilized: 0.00 MB
+Memory Efficiency: 0.00% of 60.00 GB (60.00 GB/node)

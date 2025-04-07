@@ -1,0 +1,39 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Traceback (most recent call last):
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/custom_swav_bolts.py", line 27, in <module>
+    from clinical_ts.simclr_dataset_wrapper import transformations_from_strings
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/clinical_ts/simclr_dataset_wrapper.py", line 1, in <module>
+    from butqdb_dataloaders import TrainDataset, AnnotatedDataset
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/butqdb_dataloaders.py", line 2, in <module>
+    import wfdb
+ModuleNotFoundError: No module named 'wfdb'
+srun: error: srv10: task 0: Exited with exit code 1
+srun: Terminating StepId=11037727.0
+
+JOB STATISTICS
+==============
+Job ID: 11037727
+Cluster: snellius
+User/Group: ddgraaf/ddgraaf
+State: RUNNING
+Cores: 1
+CPU Utilized: 00:00:04
+CPU Efficiency: 20.00% of 00:00:20 core-walltime
+Job Wall-clock time: 00:00:20
+Memory Utilized: 1.26 MB
+Memory Efficiency: 0.02% of 7.00 GB (7.00 GB/core)
+WARNING: Efficiency statistics can only be obtained after the job has ended as seff tool is based on the accounting database data.

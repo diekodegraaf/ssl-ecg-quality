@@ -1,0 +1,46 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+{'batch_size': 512, 'epochs': 1, 'warm_up': 1, 'eval_every_n_epochs': 1, 'fine_tune_from': 'None', 'log_every_n_steps': 50, 'lr': '5e-4', 'weight_decay': '1e-3', 'precision': 16, 'log_dir': 'experiment_logs/07-04-2025-12-01_swav_RRC_crop_ratio_range=[0.5, 1.0]_output_size=250', 'debug': False, 'model': {'out_dim': 16, 'base_model': 'xresnet1d50', 'hidden': True, 'widen': 1.0}, 'loss': {'temperature': 0.5, 'use_cosine_similarity': True}, 'dataset': {'num_workers': 2, 'data_path': './data/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0', 'signal_fs': 100, 'train_records': ['104001', '105001', '115001', '118001', '121001', '125001', '126001'], 'val_records': ['103001', '103002', '103003', '111001', '113001', '123001'], 'test_records': ['100001', '100002', '114001', '122001', '124001'], 'swav': True, 'num_crops': 7}, 'eval_epochs': 5, 'eval_every': 15, 'eval_batch_size': 512, 'lin_eval_every_n_epochs': 1, 'eval_lr': '5e-3', 'eval_wd': '1e-3', 'perform_lin_eval': True, 'perform_fine_tuning': True, 'eval_mode': 'fine_tuning', 'eval_gradual_freezing': False, 'data_path': None, 'resume': False, 'magnitude_range': [0.5, 2], 'widen': None, 'run_callbacks': False, 'radius': 10, 'trafos': ['RandomResizedCrop'], 'rr_crop_ratio_range': [0.5, 1.0], 'epsilon': 10, 'gaussian_scale': 0.01, 'distributed_backend': None, 'to_crop_ratio_range': [0.2, 0.4], 'filter_cinc': False, 'out_dim': None, 'warps': 3, 'percentage': 1.0, 'gpus': 2, 'checkpoint_path': '', 'base_model': None, 'output_size': 250, 'num_nodes': 1, 'downsample_ratio': 0.2}
+Sizes Trainloaders [526]
+Sizes Valloaders [78, 118, 78]
+Data module num workers 2
+Batch size 512
+Traceback (most recent call last):
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/custom_swav_bolts.py", line 1104, in <module>
+    cli_main()
+  File "/gpfs/home1/ddgraaf/ssl-ecg-quality/custom_swav_bolts.py", line 1080, in cli_main
+    trainer = Trainer(logger=tb_logger, max_epochs=config["epochs"], gpus=args.gpus,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ddgraaf/.conda/envs/ecg/lib/python3.12/site-packages/pytorch_lightning/utilities/argparse.py", line 70, in insert_env_defaults
+    return fn(self, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+TypeError: Trainer.__init__() got an unexpected keyword argument 'gpus'
+srun: error: gcn61: task 0: Exited with exit code 1
+srun: Terminating StepId=11039636.0
+
+JOB STATISTICS
+==============
+Job ID: 11039636
+Cluster: snellius
+User/Group: ddgraaf/ddgraaf
+State: FAILED (exit code 1)
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:00:08
+CPU Efficiency: 1.85% of 00:07:12 core-walltime
+Job Wall-clock time: 00:00:24
+Memory Utilized: 1.68 MB
+Memory Efficiency: 0.00% of 120.00 GB (120.00 GB/node)
