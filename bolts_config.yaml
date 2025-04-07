@@ -31,9 +31,9 @@ dataset:
   test_records: ['100001', '100002', '114001', '122001', '124001']
 
 # linear eval / fine-tuning
-eval_epochs: 5
+eval_epochs: 5 #5
 # eval_epochs: 50
-eval_every: 15
+eval_every: 15 #15
 # eval_every: 200
 eval_batch_size: 512
 lin_eval_every_n_epochs: 1

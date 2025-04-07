@@ -110,8 +110,8 @@ class SSLOnlineEvaluator(pl.Callback):  # pragma: no-cover
                     logger.info("train loss at epoch "+str(epoch) + ": " + str(total_loss_one_epoch))
                     logger.info("test loss at epoch "+str(epoch) + ": " + str(total_loss))
 
-            macro, total_loss = self.eval_model(trainer, features, linear_head, device, new_type)
-            self.log_values(trainer, pl_module, macro, total_loss)
+            macro_auc, macro_f1, total_loss = self.eval_model(trainer, features, linear_head, device, new_type)
+            self.log_values(trainer, pl_module, macro_auc, macro_f1, total_loss)
            
     def online_train_setup(self, pl_module, trainer):
         new_type = pl_module.type()
@@ -221,17 +221,25 @@ class SSLOnlineEvaluator(pl.Callback):  # pragma: no-cover
                     mlp_preds, y)
         preds = torch.cat(preds).numpy()
         labels = torch.cat(labels).numpy()
-        macro = roc_auc_score(labels, preds)
-        return macro, total_loss
+        macro_auc = roc_auc_score(labels, preds)
+        
+        # calucalte macro f1 with 0.5 threshold for the sigmoid output
+        threshold = 0.5
+        preds_binary = (preds >= threshold).astype(int)
+        macro_f1 = f1_score(labels, preds_binary, average='macro')
+    
+        return macro_auc, macro_f1, total_loss
 
-    def log_values(self, trainer, pl_module, macro, total_loss):
-        self.best_macro = macro if macro > self.best_macro else self.best_macro
+    def log_values(self, trainer, pl_module, macro_auc, macro_f1, total_loss):
+        self.best_macro = macro_auc if macro_auc > self.best_macro else self.best_macro
         if self.mode == "linear_evaluation":
             log_key = "le"
         else:
             log_key = "ft"
         metrics = {log_key + '_mlp/loss': total_loss,
-                   log_key + '_mlp/macro': macro, log_key + '_mlp/best_macro': self.best_macro}
+                   log_key + '_mlp/macro_AUC': macro, 
+                   log_key + '_mlp/macro_f1': macro_f1,
+                   log_key + '_mlp/best_macro_AUC': self.best_macro}
         pl_module.logger.log_metrics(metrics, step=trainer.global_step)
 
     def __str__(self):

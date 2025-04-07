@@ -27,7 +27,7 @@ import random
 #Note: multiprocessing issues with python lists and dicts (https://github.com/pytorch/pytorch/issues/13246) and pandas dfs (https://github.com/pytorch/pytorch/issues/5902)
 import multiprocessing as mp
 
-from skimage import transform
+# from skimage import transform
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
