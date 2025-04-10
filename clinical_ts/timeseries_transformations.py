@@ -903,6 +903,9 @@ class TBaselineWander(Transformation):
         data += noise.repeat(channels).reshape(channels, timesteps).T
         return data, label
     
+    def __str__(self):
+        return "BaselineWander"
+    
 # class TBaselineWander(Transformation):
 #     """Adds baseline wander to the sample.
 #     """

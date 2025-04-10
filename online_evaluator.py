@@ -5,7 +5,7 @@ import torch
 # from pytorch_lightning.metrics.functional import accuracy
 from torch.nn import functional as F
 from clinical_ts.eval_utils_cafa import eval_scores, eval_scores_bootstrap
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, f1_score
 from sklearn.preprocessing import normalize
 from torch.nn.modules.linear import Linear
 from copy import deepcopy
@@ -37,7 +37,7 @@ class SSLOnlineEvaluator(pl.Callback):  # pragma: no-cover
         self.z_dim = z_dim
         self.num_classes = num_classes
         self.macro = 0
-        self.best_macro = 0
+        self.best_macro_auc = 0
         self.lin_eval_epochs = lin_eval_epochs
         self.eval_every = eval_every
         self.discriminative = discriminative
@@ -231,15 +231,15 @@ class SSLOnlineEvaluator(pl.Callback):  # pragma: no-cover
         return macro_auc, macro_f1, total_loss
 
     def log_values(self, trainer, pl_module, macro_auc, macro_f1, total_loss):
-        self.best_macro = macro_auc if macro_auc > self.best_macro else self.best_macro
+        self.best_macro_auc = macro_auc if macro_auc > self.best_macro_auc else self.best_macro_auc
         if self.mode == "linear_evaluation":
             log_key = "le"
         else:
             log_key = "ft"
         metrics = {log_key + '_mlp/loss': total_loss,
-                   log_key + '_mlp/macro_AUC': macro, 
+                   log_key + '_mlp/macro_AUC': macro_auc, 
                    log_key + '_mlp/macro_f1': macro_f1,
-                   log_key + '_mlp/best_macro_AUC': self.best_macro}
+                   log_key + '_mlp/best_macro_AUC': self.best_macro_auc}
         pl_module.logger.log_metrics(metrics, step=trainer.global_step)
 
     def __str__(self):

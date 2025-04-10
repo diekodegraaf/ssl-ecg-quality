@@ -18,7 +18,7 @@ logger = create_logger(__name__)
 
 def transformations_from_strings(transformations, t_params):
     if transformations is None:
-        return [ToTensor()]
+        return [ToTensor(), Transpose()]
 
     def str_to_trafo(trafo):
         if trafo == "RandomResizedCrop":
@@ -38,11 +38,11 @@ def transformations_from_strings(transformations, t_params):
         elif trafo == "GaussianNoise":
             return TGaussianNoise(var=t_params["gaussian_scale"])
         elif trafo == "BaselineWander":
-            return TBaselineWander(C=t_params["bw_cmax"])
+            return TBaselineWander(C=t_params["bw_c"])
         elif trafo == "PowerlineNoise":
             return TPowerlineNoise(Cmax=t_params["pl_cmax"])
         elif trafo == "EMNoise":
-            return TEMNoise(var=t_params["em_cmax"])
+            return TEMNoise(var=t_params["em_var"])
         elif trafo == "BaselineShift":
             return TBaselineShift(Cmax=t_params["bs_cmax"])
         elif trafo == "GaussianBlur":

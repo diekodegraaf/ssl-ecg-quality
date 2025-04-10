@@ -904,6 +904,10 @@ def parse_args(parent_parser):
     # TimeOut
     parser.add_argument('--to_crop_ratio_range', nargs='+',
                             help='ratio range for timeout transformation', default=[0.2, 0.4], type=float)
+    # BaselineWander
+    parser.add_argument('--bw_c', default=0.1, type=float)
+    # EMNoise
+    parser.add_argument('--em_var', default=0.5, type=float)
     # resume training
     parser.add_argument('--resume', action='store_true')
     parser.add_argument(
@@ -917,8 +921,7 @@ def parse_args(parent_parser):
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--warm_up', default=1, type=int)
     parser.add_argument('--precision', type=int)
-    parser.add_argument('--data_path', dest="data_path",
-                            nargs='+', help='used datasets for pretraining')
+    parser.add_argument('--data_path', dest="data_path", type=str, help='path to dataset used dataset')
     parser.add_argument('--log_dir', default="./experiment_logs")
     parser.add_argument(
             '--percentage', help='determines how much of the dataset shall be used during the pretraining', type=float, default=1.0)
@@ -983,7 +986,7 @@ def  pretrain_routine(args):
     # transformations
     t_params = {"gaussian_scale": args.gaussian_scale, "rr_crop_ratio_range": args.rr_crop_ratio_range, "output_size": args.output_size, "warps": args.warps, "radius": args.radius,
                 "epsilon": args.epsilon, "magnitude_range": args.magnitude_range, "downsample_ratio": args.downsample_ratio, "to_crop_ratio_range": args.to_crop_ratio_range,
-                "bw_cmax":0.1, "em_cmax":0.5, "pl_cmax":0.2, "bs_cmax":1}
+                "bw_c":args.bw_c, "em_var":args.em_var, "pl_cmax":0.2, "bs_cmax":1}
     transformations = args.trafos
 
     # get processed transforms for strings and their set params
@@ -1001,25 +1004,32 @@ def  pretrain_routine(args):
     
 
     date = time.asctime()
-    abr = {"Transpose": "Tr", "TimeOut": "TO", "DynamicTimeWarp": "DTW", "RandomResizedCrop": "RRC", "ChannelResize": "ChR", "GaussianNoise": "GN",
+    abr = {"Negation": "Neg", "Transpose": "Tr", "TimeOut": "TO", "DynamicTimeWarp": "DTW", "RandomResizedCrop": "RRC", "ChannelResize": "ChR", "GaussianNoise": "GN",
            "TimeWarp": "TW", "ToTensor": "TT", "GaussianBlur": "GB", "BaselineWander": "BlW", "PowerlineNoise": "PlN", "EMNoise": "EM", "BaselineShift": "BlS"}
     trs = re.sub(r"[,'\]\[]", "", str([abr[str(tr)] if abr[str(tr)] not in [
                  "TT", "Tr"] else '' for tr in processed_transformations]))
-    formatted_params = [f'{k}={v}' for item in params_list[1:] for k, v in item.items()]
-    name = time.strftime("%d-%m-%Y-%H-%M") + "_" + method + "_" + trs[1:].strip() + '_' + '_'.join(formatted_params)
+    # format parameters to strings and use True if applied augment has no params
+    formatted_params = [
+        f'{k}={v}' 
+        for item in params_list[1:] 
+        for k, v in item.items()
+    ] if any(item for item in params_list[1:] if item) else ['True']
+    
+    transforms_string = trs[1:].strip() + '_' + '_'.join(formatted_params[:2])      # only include first 2 parameters in name
+    name = time.strftime("%d-%m-%Y-%H-%M") + "_" + method + "_" + transforms_string
     # + str(time.time_ns())[-3:] + "_" + trs[1:].strip()
 
     tb_logger = TensorBoardLogger(args.log_dir, name=name, version='')
     config["log_dir"] = os.path.join(args.log_dir, name)
     print(config)
-    return config, transformations, t_params, tb_logger
+    return config, transformations, t_params, tb_logger, transforms_string
 
 def aftertrain_routine(config, args, trainer, pl_model, datamodule, callbacks):
     # save best fine-tuned and linear evaluation model
     scores = {}
     for ca in callbacks:
         if isinstance(ca, SSLOnlineEvaluator):
-            scores[str(ca)] = {"macro": ca.best_macro}
+            scores[str(ca)] = {"macro": ca.best_macro_auc}
 
     results = {"config": config, "trafos": args.trafos, "scores": scores}
 
@@ -1028,7 +1038,7 @@ def aftertrain_routine(config, args, trainer, pl_model, datamodule, callbacks):
 
     # if callbacks disabled, this saves the last state of the pre-trained model
     # otherwise the fine-tuned/linear eval model. which of the 2?
-    trainer.save_checkpoint(os.path.join(config["log_dir"], "checkpoints", "model.ckpt"))
+    trainer.save_checkpoint(os.path.join(config["log_dir"], "checkpoints", "last_train_model.ckpt"))
     with open(os.path.join(config["log_dir"], "config.txt"), "w") as text_file:
         print(config, file=text_file)
 
@@ -1044,13 +1054,14 @@ def cli_main():
     parser = parse_args(parser)
     logger.info("parse arguments")
     args = parser.parse_args()
-    config, transformations, t_params, tb_logger = pretrain_routine(args)
+    config, transformations, t_params, tb_logger, transforms_string = pretrain_routine(args)
     # print('Output datafolder', config["dataset"]["data_folder"])
     
-    # data
-
-    ecg_datamodule = ECGDataModule(config, transformations, t_params)
+    # set torch precision mode
+    torch.set_float32_matmul_precision('medium')
     
+    # data
+    ecg_datamodule = ECGDataModule(config, transformations, t_params)
     train_loaders = ecg_datamodule.train_dataloader()
     val_loaders = ecg_datamodule.val_dataloader()
     if type(train_loaders) == list:
@@ -1082,7 +1093,7 @@ def cli_main():
         mode='min',          
         save_top_k=1,        
         dirpath=os.path.join(config["log_dir"], "checkpoints"),
-        filename='best_pretrained_swav_{epoch}-{val_loss:.4f}'
+        filename=f'best_pretrained_swav_{transforms_string}' + '_{epoch}-{val_loss:.4f}'
     )
     callbacks.append(checkpoint_callback)
     # convert gpus argument to devices

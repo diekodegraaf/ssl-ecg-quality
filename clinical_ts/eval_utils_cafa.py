@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score, auc
 from scipy.interpolate import interp1d
 
-from sklearn.metrics import roc_curve, precision_recall_curve
+from sklearn.metrics import roc_curve, precision_recall_curve, f1_score
 from sklearn.utils import resample
 
 from tqdm import tqdm
@@ -167,7 +167,7 @@ def eval_prrc_parallel(y_true,y_pred,thresholds):
 
 
 # Cell
-def eval_scores(y_true,y_pred,classes=None,num_thresholds=100,full_output=False,parallel=True):
+def eval_scores(y_true,y_pred,classes=None,num_thresholds=100,full_output=False, parallel=True):
     '''returns a dictionary of performance metrics:
     sample centric c.f. https://github.com/ashleyzhou972/CAFA_assessment_tool/blob/master/precrec/precRec.py
     https://www.nature.com/articles/nmeth.2340 vs https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3694662/ and https://arxiv.org/pdf/1601.00891
@@ -176,61 +176,25 @@ def eval_scores(y_true,y_pred,classes=None,num_thresholds=100,full_output=False,
     label-centric: micro,macro,individual AUC and Average Precision
     '''
     results = {}
-
-    # thresholds = np.arange(0.00, 1.01, 1./num_thresholds, float)
-    # if(parallel is False):
-    #     PR = np.zeros(len(thresholds))
-    #     RC = np.zeros(len(thresholds))
-    #     SP = np.zeros(len(thresholds))
-    #     COV = np.zeros(len(thresholds))
-
-    #     for i,t in enumerate(thresholds):
-    #         PR[i],RC[i],SP[i],COV[i] = eval_prrc(y_true,y_pred,t)
-    #     F =  (2*PR*RC)/(PR+RC)
-    # else:
-    #     PR,RC,SP,COV = eval_prrc_parallel(y_true,y_pred,thresholds)
-    #     F = (2*PR*RC)/(PR+RC)
-
-    # if(full_output is True):
-    #     results["PR"] = PR
-    #     results["RC"] = RC
-    #     results["SP"] = SP
-    #     results["F"] = F
-    #     results["COV"] = COV
-
-    # if np.isnan(F).sum() == len(F):
-    #     results["Fmax"] = 0
-    #     results["precision_at_Fmax"] = 0
-    #     results["recall_at_Fmax"] = 0
-    #     results["threshold_at_Fmax"] = 0
-    #     results["coverage_at_Fmax"]= 0
-    # else:
-    #     imax = np.nanargmax(F)
-    #     results["Fmax"] = F[imax]
-    #     results["precision_at_Fmax"] = PR[imax]
-    #     results["recall_at_Fmax"] = RC[imax]
-    #     results["threshold_at_Fmax"] = thresholds[imax]
-    #     results["coverage_at_Fmax"]=COV[imax]
-
-    # results["sample_AUC"]=auc(1-SP,RC)
-    # #https://github.com/scikit-learn/scikit-learn/blob/1495f6924/sklearn/metrics/ranking.py set final PR value to 1
-    # PR[-1]=1
-    # results["sample_APR"]=auc_prrc_uninterpolated(RC,PR)#skip last point with undefined precision
-    ###########################################################
-    #label-centric
-    #"micro","macro",i=0...n_classes-1
+    
+    # calculate AUC
     fpr, tpr, roc_auc = multiclass_roc_curve(y_true, y_pred,classes=classes,precision_recall=False)
     if(full_output is True):
         results["fpr"]=fpr
         results["tpr"]=tpr
-    results["label_AUC"]=roc_auc
+        
+    results["label_AUC"] = roc_auc
 
-    # rc, pr, prrc_auc = multiclass_roc_curve(y_true, y_pred,classes=classes,precision_recall=True)
-    # if(full_output is True):
-    #     results["pr"]=pr
-    #     results["rc"]=rc
-    # results["label_APR"]=prrc_auc
-
+    # calculate macro f1
+    # convert preds to binary with threshold 0.5 if given probabilities over classes 
+    if y_pred.ndim > 1 and y_pred.max() <= 1.0:  
+        y_pred_bin = (y_pred > 0.5).astype(int)
+    else:
+        y_pred_bin = y_pred
+    
+    results['f1'] = {}
+    macro_f1 = f1_score(y_true, y_pred_bin, average='macro')
+    results['f1']['macro'] = macro_f1
     return results
 
 # Cell

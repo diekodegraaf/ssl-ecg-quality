@@ -1,8 +1,13 @@
 # Ignore the data folder
 data/
 
-# Ignore the experiment_logs folder
+# Ignore the log folders
 experiment_logs/
+evaluation_logs/
+
+# Ignore the fully pre-trained or evaluated checkpoints 
+pretrained_models/
+evaluated_models/
 
 # Ignore Python cache files
 __pycache__/
