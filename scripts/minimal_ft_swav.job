@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=2
+#SBATCH --job-name=Min_FT_SwAV
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=36
+#SBATCH --time=01:00:00
+#SBATCH --output=job_outputs/minimal_ft_swav_output%A.out.out
+# %j = jobid
+
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+
+cd $HOME/ssl-ecg-quality/
+source activate ecg
+
+#cp -r $HOME/ssl-ecg-quality/data/but-qdb/ $TMPDIR
+
+# srun python eval.py --method "swav" --use_pretrained --batch_size 1024 --f_epochs 5 --log_dir evaluation_logs \
+#                        --model_file "pretrained_models/09-04-2025-12-34_swav_DTW_w=1_r=10/checkpoints/best_pretrained_swav_DTW_w=1_r=10_epoch=135-val_loss=4.1047.ckpt"
+
+# ########################### DynamicTimeWarp [(1, 10), (3, 5), (3, 10)]
+srun python eval.py --method "swav" --use_pretrained --batch_size 1024 --f_epochs 25 --discriminative_lr --warmup_epochs 5 --log_dir evaluation_logs \
+                    --model_file "pretrained_models/09-04-2025-12-34_swav_DTW_w=1_r=10/checkpoints/best_pretrained_swav_DTW_w=1_r=10_epoch=135-val_loss=4.1047.ckpt"
+

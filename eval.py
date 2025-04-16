@@ -47,6 +47,7 @@ def parse_args():
     parser.add_argument("--load_finetuned", action="store_true", default=False)
     parser.add_argument("--eval_only", action="store_true", default=False, help="only evaluate mode")
     parser.add_argument("--verbose", action="store_true", default=False)
+    parser.add_argument("--warmup_epochs", type=int, default=0, help="number of epochs with lower lr during fine-tuning")
     
     parser.add_argument("--hidden", default=False, action="store_true")
     parser.add_argument("--lr_schedule", default="{}")
@@ -176,8 +177,7 @@ def configure_optimizer(model, batch_size, head_only=False, discriminative_lr=Fa
                     optimizer_param_list.append(
                         {"params": layer_params, "lr": tmp_lr})
                     tmp_lr /= 4
-                optimizer = torch.optim.AdamW(
-                    optimizer_param_list, lr=lr, weight_decay=wd)
+                optimizer = torch.optim.AdamW(optimizer_param_list, lr=lr, weight_decay=wd)
         print("lr", lr)
         print("wd", wd)
         print("batch size", batch_size)
@@ -246,7 +246,7 @@ def set_train_eval(model, linear_evaluation):
         model.train()
 
 
-def train_model(model, train_loader, valid_loader, test_loader, epochs, loss_fn, optimizer, head_only=True, linear_evaluation=False, percentage=1, lr_schedule=None, save_model_at=None, writer=None, global_step=0, verbose=False):
+def train_model(model, train_loader, valid_loader, test_loader, epochs, loss_fn, optimizer, head_only=True, linear_evaluation=False, percentage=1, warmup_epochs=0, lr_schedule=None, save_model_at=None, writer=None, global_step=0, verbose=False):
     if head_only:
         if linear_evaluation:
             print("linear evaluation for {} epochs".format(epochs))
@@ -274,22 +274,31 @@ def train_model(model, train_loader, valid_loader, test_loader, epochs, loss_fn,
     max_batches = len(train_loader)
     break_point = int(percentage*max_batches)
     
-    best_macro_auc = 0      # best validation macro AUC
     best_macro_f1_agg = 0  # aggeragete over crops?? 
-    best_val_epoch = 0      # epoch of best macro AUC
     best_val_preds = None   # save predictions of best validation epoch?
     test_macro_auc = 0      # test macro AUC
-    test_macro_auc_agg = 0  # test aggregate AUC over?
-
+    
+    # get learning rates from optimizer
+    base_lrs = [group['lr'] for group in optimizer.param_groups]
+    
     for epoch in range(epochs):
-        if type(lr_schedule) == dict:
-            if epoch in lr_schedule.keys():
-                for param_group in optimizer.param_groups:
-                    param_group['lr'] /= lr_schedule[epoch]
+        # apply warmup scaling if in warmup phase
+        if epoch < warmup_epochs:
+            warmup_factor = (epoch + 1) / warmup_epochs
+            for group_idx, param_group in enumerate(optimizer.param_groups):
+                base_lr = base_lrs[group_idx]  # Save these when you initialize optimizer
+                param_group['lr'] = warmup_factor * base_lr
+        else:
+            # follow lr schedule
+            if isinstance(lr_schedule, dict):
+                if epoch in lr_schedule.keys():
+                    for param_group in optimizer.param_groups:
+                        param_group['lr'] /= lr_schedule[epoch]
 
         # print epoch on single line instead of tqdm
         if not verbose:
             print(f"Train epoch ({epoch+1}/{epochs})", end='\r')
+
         # train
         total_loss_one_epoch = 0
         for batch_idx, samples in enumerate(tqdm(train_loader, desc=f'Trainloader Epoch({epoch+1}/{epochs})', disable=not verbose)):
@@ -540,7 +549,7 @@ if __name__ == "__main__":
             print(f"\n======================== Linear evaluation for {args.l_epochs} epochs")
             # loss_per_epoch, macro_agg_f1_per_epoch, best_macro_f1, best_macro_f1_agg, test_macro_f1, test_macro_f1_agg, best_epoch, best_val_preds, test_preds
             l1, m1, bm, bm_agg, tm, tm_agg, ckpt_epoch_lin, val_preds_lin, test_preds_lin, val_ytrue_lin, test_ytrue_lin, global_step = train_model(model, train_loader, valid_loader, test_loader, args.l_epochs, loss_fn,
-                                                                                                optimizer, head_only=True, linear_evaluation=args.linear_evaluation, lr_schedule=args.lr_schedule, 
+                                                                                                optimizer, head_only=True, linear_evaluation=args.linear_evaluation, lr_schedule=args.lr_schedule,
                                                                                                 save_model_at=os.path.join(save_model_at, "best_val_linear.pt"), writer=tb_writer, verbose=args.verbose)
             # print best f1 macro
             print('Linear evaluation results:')
@@ -562,7 +571,7 @@ if __name__ == "__main__":
             loss_fn, optimizer = configure_optimizer(model, args.batch_size, head_only=False, discriminative_lr=args.discriminative_lr)
             # fine-tune model
             l2, m2, bm, bm_agg, tm, tm_agg, ckpt_epoch_fin, val_preds_fin, test_preds_fin, val_ytrue_fin, test_ytrue_fin,  _ = train_model(model, train_loader, valid_loader, test_loader, args.f_epochs, loss_fn,
-                                                                                                optimizer, head_only=False, linear_evaluation=False, lr_schedule=args.lr_schedule, 
+                                                                                                optimizer, head_only=False, linear_evaluation=False, lr_schedule=args.lr_schedule, warmup_epochs=args.warmup_epochs,
                                                                                                 save_model_at=os.path.join(save_model_at, "best_val_finetuned.pt"), writer=tb_writer, global_step=global_step, verbose=args.verbose)
                             
             print('Fine-tuning results:')
