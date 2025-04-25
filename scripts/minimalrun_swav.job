@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #SBATCH --partition=gpu_a100
-#SBATCH --gpus=1
+#SBATCH --gpus=2
 #SBATCH --job-name=MinimalRunSwAV
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=36
 #SBATCH --time=01:00:00
 #SBATCH --output=job_outputs/slurm_output_%A.out
 
@@ -15,4 +15,11 @@ module load Anaconda3/2024.06-1
 cd $HOME/ssl-ecg-quality/
 source activate ecg
 
-srun python -u custom_swav_bolts.py --batch_size 512 --epochs 1 --precision 16 --trafos RandomResizedCrop --log_dir=experiment_logs --gpus=2
+#cp -r $HOME/ssl-ecg-quality/data/but-qdb/ $TMPDIR
+
+#srun python -u custom_swav_bolts.py --batch_size 1024 --epochs 1 --precision 32 --trafos DynamicTimeWarp --warps 3 --radius 5 --log_dir experiment_logs --gpus 2 \
+			            #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+srun python -u custom_swav_bolts.py --batch_size 1024 --epochs 1 --precision 32 --trafos TimeOut --to_crop_ratio_range 0.4 0.5  --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+

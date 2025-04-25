@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=2
+#SBATCH --job-name=MinimalRunBYOL
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=36
+#SBATCH --time=01:00:00
+#SBATCH --output=job_outputs/min_byol_%A.out
+
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+
+cd $HOME/ssl-ecg-quality/
+source activate ecg
+
+#cp -r $HOME/ssl-ecg-quality/data/but-qdb/ $TMPDIR
+
+srun python -u custom_byol_bolts.py --batch_size 4096 --epochs 15 --precision 16 --trafos RandomResizedCrop --log_dir=experiment_logs --gpus 2

@@ -30,6 +30,10 @@ from copy import deepcopy
 from os.path import join, isdir
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+# # ToTenor included in Model parameters
+# from torch.serialization import add_safe_globals
+# from clinical_ts.timeseries_transformations import ToTensor
+# add_safe_globals([ToTensor])
 
 def parse_args():
     parser = argparse.ArgumentParser("Finetuning tests")
@@ -588,9 +592,10 @@ if __name__ == "__main__":
         result_macros_agg.append(bm_agg)
 
     else:
+        # return preds, macro_auc, macro_f1, macro_auc_agg, macro_f1_agg, targs
         test_preds, eval_macro_auc, eval_macro_f1, eval_macro_auc_agg, eval_macro_f1_agg, test_ytrue = evaluate(model, test_loader)
-        result_macros.append(eval_macro_f1)
-        result_macros_agg.append(eval_macro_f1_agg)
+        test_macros.append(eval_macro_f1)
+        test_macros_agg.append(eval_macro_f1_agg)
         if args.verbose:
             print("macro:", eval_macro_f1)
     

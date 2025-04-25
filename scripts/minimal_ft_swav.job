@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=36
 #SBATCH --time=01:00:00
-#SBATCH --output=job_outputs/minimal_ft_swav_output%A.out.out
+#SBATCH --output=job_outputs/minimal_ft_swav_output%A.out
 # %j = jobid
 
 module purge
@@ -22,6 +22,6 @@ source activate ecg
 #                        --model_file "pretrained_models/09-04-2025-12-34_swav_DTW_w=1_r=10/checkpoints/best_pretrained_swav_DTW_w=1_r=10_epoch=135-val_loss=4.1047.ckpt"
 
 # ########################### DynamicTimeWarp [(1, 10), (3, 5), (3, 10)]
-srun python eval.py --method "swav" --use_pretrained --batch_size 1024 --f_epochs 25 --discriminative_lr --warmup_epochs 5 --log_dir evaluation_logs \
+srun python eval.py --method "swav" --use_pretrained --batch_size 1024 --f_epochs 25 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
                     --model_file "pretrained_models/09-04-2025-12-34_swav_DTW_w=1_r=10/checkpoints/best_pretrained_swav_DTW_w=1_r=10_epoch=135-val_loss=4.1047.ckpt"
 

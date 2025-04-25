@@ -1,0 +1,92 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=2
+#SBATCH --job-name=RunBYOL
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=36
+#SBATCH --time=8:00:00
+#SBATCH --output=job_outputs/run_byol_%A.out
+
+# %j = jobid
+
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+
+cd $HOME/ssl-ecg-quality/
+source activate ecg
+
+#cp -r $HOME/ssl-ecg-quality/data/but-qdb/ $TMPDIR
+
+########################### DynamicTimeWarp [(1, 10), (3, 5), (3, 10)]
+srun -u python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos DynamicTimeWarp --warps 3 --radius 5 --log_dir experiment_logs --gpus 2 \
+			            #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos DynamicTimeWarp --warps 1 --radius 10 --log_dir experiment_logs --gpus 2 \
+			            #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos DynamicTimeWarp --warps 3 --radius 10 --log_dir experiment_logs --gpus 2 \
+			            #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+
+########################### TimeOut [(0.1, 0.2), (0.4, 0.5), (0, 0.5)]
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos TimeOut --to_crop_ratio_range 0.4 0.5 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos TimeOut --to_crop_ratio_range 0.1 0.2 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos TimeOut --to_crop_ratio_range 0 0.5 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+########################### GaussianNoise [0.01, 0.1, 1]
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos GaussianNoise --gaussian_scale 0.01 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos GaussianNoise --gaussian_scale 0.1 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos GaussianNoise --gaussian_scale 1 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+
+########################### ChannelResize (0.4, 0.5)?, [(0.33, 3), (0.33, 1), (0.5, 2)]
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos ChannelResize --magnitude_range 0.4 0.5 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos ChannelResize --magnitude_range 0.33 1 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos ChannelResize --magnitude_range 0.33 3 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos ChannelResize --magnitude_range 0.5 2 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+
+########################## EMNoise [0.01, 0.5, 1]  Default is 0.5, custom value not implemented 
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos EMNoise --em_var 0.5  --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos EMNoise --em_var 0.01 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos EMNoise --em_var 1 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+
+########################## Negation
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos Negation --log_dir experiment_logs --gpus 2
+				   #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+
+########################## BaselineWander [0.1, 0.7, 1]   Default is 0.1, custom value not implemented
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos BaselineWander --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos BaselineWander --bw_c 0.7 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0
+
+# srun python custom_byol_bolts.py --batch_size 4096 --epochs 150 --precision 32 --trafos BaselineWander --bw_c 1 --log_dir experiment_logs --gpus 2 \
+                                    #--data_path $TMPDIR/but-qdb/brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0

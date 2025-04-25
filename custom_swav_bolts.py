@@ -620,7 +620,7 @@ class CustomSwAV(pl.LightningModule):
             return {}
         loss = self.shared_step(batch)
 
-        # self.log('val_loss', loss, on_step=False, on_epoch=True)
+        self.log('val_loss', loss, on_step=False, on_epoch=True)
         self.val_losses.append(loss)
 
         return {'val_loss': loss}
@@ -1002,8 +1002,6 @@ def  pretrain_routine(args):
     
     # print(config['batch_size'], [*config['dataset']], transformations, t_params)
     
-
-    date = time.asctime()
     abr = {"Negation": "Neg", "Transpose": "Tr", "TimeOut": "TO", "DynamicTimeWarp": "DTW", "RandomResizedCrop": "RRC", "ChannelResize": "ChR", "GaussianNoise": "GN",
            "TimeWarp": "TW", "ToTensor": "TT", "GaussianBlur": "GB", "BaselineWander": "BlW", "PowerlineNoise": "PlN", "EMNoise": "EM", "BaselineShift": "BlS"}
     trs = re.sub(r"[,'\]\[]", "", str([abr[str(tr)] if abr[str(tr)] not in [

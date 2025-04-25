@@ -1,0 +1,89 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=2
+#SBATCH --job-name=LE_BYOL
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=36
+#SBATCH --time=15:00:00
+#SBATCH --output=job_outputs/eval_linear_byol_full.out
+#_output%A.out
+
+# %j = jobid
+
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+
+cd $HOME/ssl-ecg-quality/
+source activate ecg
+
+#cp -r $HOME/ssl-ecg-quality/data/but-qdb/ $TMPDIR
+
+###### minimal test
+# srun python -u eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 5 --log_dir evaluation_logs \
+#                     --model_file "finished_models/pretrained_models_byol/16-04-2025-22-49_byol_DTW_w=1_r=10/checkpoints/best_pretrained_byol_DTW_w=1_r=10_epoch=147-val_loss=-3.9979.ckpt"
+
+########################### DynamicTimeWarp [(1, 10), (3, 5), (3, 10)]
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/16-04-2025-22-49_byol_DTW_w=1_r=10/checkpoints/best_pretrained_byol_DTW_w=1_r=10_epoch=147-val_loss=-3.9979.ckpt"
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/16-04-2025-20-51_byol_DTW_w=3_r=5/checkpoints/best_pretrained_byol_DTW_w=3_r=5_epoch=149-val_loss=-3.9991.ckpt"
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/16-04-2025-23-34_byol_DTW_w=3_r=10/checkpoints/best_pretrained_byol_DTW_w=3_r=10_epoch=149-val_loss=-3.9976.ckpt"
+
+########################### TimeOut [(0.1, 0.2), (0.4, 0.5), (0, 0.5)]
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-01-08_byol_TO_crop_ratio_range=[0.1, 0.2]/checkpoints/best_pretrained_byol_TO_crop_ratio_range=[0.1, 0.2]_epoch=133-val_loss=-3.8597.ckpt"
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-00-23_byol_TO_crop_ratio_range=[0.4, 0.5]/checkpoints/best_pretrained_byol_TO_crop_ratio_range=[0.4, 0.5]_epoch=120-val_loss=-3.7461.ckpt" 
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-01-52_byol_TO_crop_ratio_range=[0.0, 0.5]/checkpoints/best_pretrained_byol_TO_crop_ratio_range=[0.0, 0.5]_epoch=128-val_loss=-3.8181.ckpt"
+
+########################### GaussianNoise [0.01, 0.1, 1]
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-02-37_byol_GN_var=0.01/checkpoints/best_pretrained_byol_GN_var=0.01_epoch=145-val_loss=-3.9976.ckpt"
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-03-21_byol_GN_var=0.1/checkpoints/best_pretrained_byol_GN_var=0.1_epoch=147-val_loss=-3.9972.ckpt"
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-04-06_byol_GN_var=1.0/checkpoints/best_pretrained_byol_GN_var=1.0_epoch=147-val_loss=-3.9976.ckpt"
+
+########################### ChannelResize (0.4, 0.5)?, [(0.33, 3), (0.33, 1), (0.5, 2)]
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-05-35_byol_ChR_magnitude_range=[0.33, 1.0]/checkpoints/best_pretrained_byol_ChR_magnitude_range=[0.33, 1.0]_epoch=147-val_loss=-3.9215.ckpt"
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-12-13_byol_ChR_magnitude_range=[0.33, 3.0]/checkpoints/best_pretrained_byol_ChR_magnitude_range=[0.33, 3.0]_epoch=139-val_loss=-3.9367.ckpt"
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-12-58_byol_ChR_magnitude_range=[0.5, 2.0]/checkpoints/best_pretrained_byol_ChR_magnitude_range=[0.5, 2.0]_epoch=139-val_loss=-3.9688.ckpt"
+
+########################## EMNoise [0.01, 0.5, 1]  Default is 0.5, custom value not implemented 
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-14-28_byol_EM_var=0.01/checkpoints/best_pretrained_byol_EM_var=0.01_epoch=149-val_loss=-3.9978.ckpt"
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-13-44_byol_EM_var=0.5/checkpoints/best_pretrained_byol_EM_var=0.5_epoch=144-val_loss=-3.9975.ckpt"
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-15-13_byol_EM_var=1.0/checkpoints/best_pretrained_byol_EM_var=1.0_epoch=147-val_loss=-3.9977.ckpt"
+
+########################## Negation
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-15-58_byol_Neg_True/checkpoints/best_pretrained_byol_Neg_True_epoch=146-val_loss=-3.9977.ckpt"
+
+########################## BaselineWander [0.1, 0.7, 1]   Default is 0.1, custom value not implemented
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-16-42_byol_BlW_fs=100_C=0.1/checkpoints/best_pretrained_byol_BlW_fs=100_C=0.1_epoch=146-val_loss=-3.9974.ckpt"
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-17-35_byol_BlW_fs=100_C=0.7/checkpoints/best_pretrained_byol_BlW_fs=100_C=0.7_epoch=146-val_loss=-3.9974.ckpt"
+
+srun python eval.py --method "byol" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_byol/17-04-2025-18-27_byol_BlW_fs=100_C=1.0/checkpoints/best_pretrained_byol_BlW_fs=100_C=1.0_epoch=148-val_loss=-3.9976.ckpt"

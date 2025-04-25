@@ -8,6 +8,7 @@ evaluation_logs/
 # Ignore the fully pre-trained or evaluated checkpoints 
 pretrained_models/
 evaluated_models/
+finished_models/
 
 # Ignore Python cache files
 __pycache__/
