@@ -1,5 +1,7 @@
 # Ignore the data folder
 data/
+# ignore symlink
+data
 
 # Ignore the log folders
 experiment_logs/

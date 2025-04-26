@@ -35,7 +35,7 @@ eval_epochs: 5 #5
 # eval_epochs: 50
 eval_every: 15 #15
 # eval_every: 200
-eval_batch_size: 512
+# eval_batch_size: 512
 lin_eval_every_n_epochs: 1
 eval_lr: 5e-3
 eval_wd: 1e-3

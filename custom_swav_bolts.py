@@ -680,12 +680,12 @@ class CustomSwAV(pl.LightningModule):
                 weight_decay=self.weight_decay
             )
 
-        if self.lars_wrapper:
-            optimizer = LARSWrapper(
-                optimizer,
-                eta=0.001,  # trust coefficient
-                clip=False
-            )
+        # if self.lars_wrapper:
+        #     optimizer = LARSWrapper(
+        #         optimizer,
+        #         eta=0.001,  # trust coefficient
+        #         clip=False
+        #     )
 
         return optimizer
     
@@ -981,6 +981,10 @@ def  pretrain_routine(args):
     # print(config["dataset"].keys())
     # config["eval_dataset"]["swav"] = True
     # config["eval_dataset"]["num_crops"] = 7
+    
+    if config.get('eval_batch_size') is None:
+        config['eval_batch_size'] = config['batch_size']
+        
     logger = init_logger(config)
     
     # transformations

@@ -1,0 +1,67 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=2
+#SBATCH --job-name=EvalDebug
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=36
+#SBATCH --time=5:00:00
+#SBATCH --output=job_outputs/simclr_eval_debug%A.out
+#_output%A.out
+
+# %j = jobid
+
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+
+cd $HOME/ssl-ecg-quality/
+source activate ecg
+
+#cp -r $HOME/ssl-ecg-quality/data/but-qdb/ $TMPDIR
+
+###### minimal test
+# srun python -u eval.py --verbose --method "simclr" --use_pretrained --batch_size 4096 --f_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+#                     --model_file "finished_models/pretrained_models_simclr/25-04-2025-15-54_simclr_DTW_w=3_r=10/checkpoints/best_pretrained_simclr_DTW_w=3_r=10_epoch=149-val_loss=7.4419.ckpt" 
+
+# ########################### DynamicTimeWarp (3, 10), train and validation accuracy of 1 during pretrain (lowest val loss of DTW)
+# three times fine-tuning
+srun python eval.py --method "simclr" --use_pretrained --batch_size 4096 --f_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-15-54_simclr_DTW_w=3_r=10/checkpoints/best_pretrained_simclr_DTW_w=3_r=10_epoch=149-val_loss=7.4419.ckpt" 
+
+srun python eval.py --method "simclr" --use_pretrained --batch_size 4096 --f_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-15-54_simclr_DTW_w=3_r=10/checkpoints/best_pretrained_simclr_DTW_w=3_r=10_epoch=149-val_loss=7.4419.ckpt" 
+
+srun python eval.py --method "simclr" --use_pretrained --batch_size 4096 --f_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-15-54_simclr_DTW_w=3_r=10/checkpoints/best_pretrained_simclr_DTW_w=3_r=10_epoch=149-val_loss=7.4419.ckpt" 
+
+# three times linear evaluation
+srun python eval.py --method "simclr" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-15-54_simclr_DTW_w=3_r=10/checkpoints/best_pretrained_simclr_DTW_w=3_r=10_epoch=149-val_loss=7.4419.ckpt" 
+
+srun python eval.py --method "simclr" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-15-54_simclr_DTW_w=3_r=10/checkpoints/best_pretrained_simclr_DTW_w=3_r=10_epoch=149-val_loss=7.4419.ckpt" 
+
+srun python eval.py --method "simclr" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-15-54_simclr_DTW_w=3_r=10/checkpoints/best_pretrained_simclr_DTW_w=3_r=10_epoch=149-val_loss=7.4419.ckpt" 
+
+########################### TimeOut (0.4, 0.5) train and val accuracy of < 1 and this range has lowest train and val loss (also pret-train acc)
+# three times fine-tuning
+srun python eval.py --method "simclr" --use_pretrained --batch_size 4096 --f_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-17-57_simclr_TO_crop_ratio_range=[0.1, 0.2]/checkpoints/best_pretrained_simclr_TO_crop_ratio_range=[0.1, 0.2]_epoch=148-val_loss=7.4442.ckpt"
+
+srun python eval.py --method "simclr" --use_pretrained --batch_size 4096 --f_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-17-57_simclr_TO_crop_ratio_range=[0.1, 0.2]/checkpoints/best_pretrained_simclr_TO_crop_ratio_range=[0.1, 0.2]_epoch=148-val_loss=7.4442.ckpt"
+
+srun python eval.py --method "simclr" --use_pretrained --batch_size 4096 --f_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-17-57_simclr_TO_crop_ratio_range=[0.1, 0.2]/checkpoints/best_pretrained_simclr_TO_crop_ratio_range=[0.1, 0.2]_epoch=148-val_loss=7.4442.ckpt"
+
+# three times linear evaluation
+srun python eval.py --method "simclr" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-17-57_simclr_TO_crop_ratio_range=[0.1, 0.2]/checkpoints/best_pretrained_simclr_TO_crop_ratio_range=[0.1, 0.2]_epoch=148-val_loss=7.4442.ckpt"
+
+srun python eval.py --method "simclr" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-17-57_simclr_TO_crop_ratio_range=[0.1, 0.2]/checkpoints/best_pretrained_simclr_TO_crop_ratio_range=[0.1, 0.2]_epoch=148-val_loss=7.4442.ckpt"
+
+srun python eval.py --method "simclr" --use_pretrained --linear_evaluation --batch_size 4096 --l_epochs 50 --discriminative_lr --warmup_epochs 10 --log_dir evaluation_logs \
+                    --model_file "finished_models/pretrained_models_simclr/25-04-2025-17-57_simclr_TO_crop_ratio_range=[0.1, 0.2]/checkpoints/best_pretrained_simclr_TO_crop_ratio_range=[0.1, 0.2]_epoch=148-val_loss=7.4442.ckpt"

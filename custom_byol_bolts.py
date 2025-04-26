@@ -124,8 +124,8 @@ class BYOLMAWeightUpdate(pl.Callback):
 
 class CustomBYOL(pl.LightningModule):
     def __init__(self,
-                 num_classes=5,
-                 learning_rate: float = 0.2,
+                 num_classes=3,
+                 learning_rate: float = 5e-4,
                  weight_decay: float = 1.5e-6,
                  input_height: int = 32,
                  batch_size: int = 32,
@@ -156,6 +156,12 @@ class CustomBYOL(pl.LightningModule):
         self.target_network = deepcopy(self.online_network)
         self.weight_callback = BYOLMAWeightUpdate()
         self.log_dict = {}
+        
+        self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
+        self.max_epochs = max_epochs
+        self.warmup_epochs = warmup_epochs
+        
         self.epoch = 0
         # self.model_device = self.online_network.encoder.features[0][0].weight.device
 
@@ -261,14 +267,14 @@ class CustomBYOL(pl.LightningModule):
         return {'val_loss': val_loss, 'log': log, 'progress_bar': log}
     
     def configure_optimizers(self):
-        optimizer = Adam(self.parameters(), lr=self.hparams.learning_rate,
-                         weight_decay=self.hparams.weight_decay)
+        optimizer = Adam(self.parameters(), lr=self.learning_rate,
+                         weight_decay=self.weight_decay)
         # optimizer = LARSWrapper(optimizer)
         optimizer = optimizer
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
-            warmup_epochs=self.hparams.warmup_epochs,
-            max_epochs=self.hparams.max_epochs
+            warmup_epochs=self.warmup_epochs,
+            max_epochs=self.max_epochs
         )
         return [optimizer], [scheduler]
 
@@ -327,11 +333,15 @@ def parse_args(parent_parser):
     parser.add_argument('--magnitude_range', nargs='+',
                             help='range for scale param for ChannelResize transformation', default=[0.5, 2], type=float)
     # Downsample
-    parser.add_argument(
-            '--downsample_ratio', help='downsample ratio for Downsample transformation', default=0.2, type=float)
+    parser.add_argument('--downsample_ratio', 
+                        help='downsample ratio for Downsample transformation', default=0.2, type=float)
     # TimeOut
     parser.add_argument('--to_crop_ratio_range', nargs='+',
                             help='ratio range for timeout transformation', default=[0.2, 0.4], type=float)
+    # BaselineWander
+    parser.add_argument('--bw_c', default=0.1, type=float)
+    # EMNoise
+    parser.add_argument('--em_var', default=0.5, type=float)
     # resume training
     parser.add_argument('--resume', action='store_true')
     parser.add_argument(
@@ -360,10 +370,6 @@ def parse_args(parent_parser):
     parser.add_argument('--checkpoint_path', default="")
     
     parser.add_argument('--data_path', default=None, help="path to the data folder")
-    # BaselineWander
-    parser.add_argument('--bw_c', default=0.1, type=float)
-    # EMNoise
-    parser.add_argument('--em_var', default=0.5, type=float)
     return parser
 
 def init_logger(config):
@@ -397,7 +403,11 @@ def pretrain_routine(args):
     # print(config["dataset"]["filter_cinc"])
     config["model"]["base_model"] = args.base_model if args.base_model is not None else config["model"]["base_model"]
     config["model"]["widen"] = args.widen if args.widen is not None else config["model"]["widen"]
+    if args.out_dim is not None:
+        config["model"]["out_dim"] = args.out_dim
     
+    if config.get('eval_batch_size') is None:
+        config['eval_batch_size'] = config['batch_size']
     
     # transformations
     t_params = {"gaussian_scale": args.gaussian_scale, "rr_crop_ratio_range": args.rr_crop_ratio_range, "output_size": args.output_size, "warps": args.warps, "radius": args.radius,
@@ -405,6 +415,7 @@ def pretrain_routine(args):
                 "bw_c":args.bw_c, "em_var":args.em_var, "pl_cmax":0.2, "bs_cmax":1}
     transformations = args.trafos
     
+    # logger
     logger = init_logger(config)
     dataset = SimCLRDataSetWrapper(
         config['batch_size'], **config['dataset'], transformations=transformations, t_params=t_params)
@@ -413,9 +424,6 @@ def pretrain_routine(args):
                     str(t) + ": " + str(t.get_params()))
     
     params_list = [t.get_params() for t in dataset.transformations]
-        
-    if args.out_dim is not None:
-        config["model"]["out_dim"] = args.out_dim
         
     abr = {"Negation": "Neg", "Transpose": "Tr", "TimeOut": "TO", "DynamicTimeWarp": "DTW", "RandomResizedCrop": "RRC", "ChannelResize": "ChR", "GaussianNoise": "GN",
            "TimeWarp": "TW", "ToTensor": "TT", "GaussianBlur": "GB", "BaselineWander": "BlW", "PowerlineNoise": "PlN", "EMNoise": "EM", "BaselineShift": "BlS"}
@@ -470,10 +478,10 @@ def cli_main():
     logger.info("parse arguments")
     args = parser.parse_args()
 
-    config, transformations, t_params, tb_logger, transforms_string = pretrain_routine(args)
-
     # set torch precision mode
     torch.set_float32_matmul_precision('medium')
+
+    config, transformations, t_params, tb_logger, transforms_string = pretrain_routine(args)
     
     # data
     ecg_datamodule = ECGDataModule(config, transformations, t_params)
