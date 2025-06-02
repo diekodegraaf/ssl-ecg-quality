@@ -1,6 +1,7 @@
 
 from ctypes.util import test
 from re import A
+from unittest import result
 import yaml
 from torch.utils.tensorboard import SummaryWriter
 import torch
@@ -28,6 +29,8 @@ from clinical_ts.timeseries_utils import aggregate_predictions
 import pdb
 from copy import deepcopy
 from os.path import join, isdir
+import random 
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # # ToTenor included in Model parameters
@@ -35,6 +38,18 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # from clinical_ts.timeseries_transformations import ToTensor
 # add_safe_globals([ToTensor])
 
+def set_seed(seed: int = 42):
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"  
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    print('Setting seed to', seed)
+    
 def parse_args():
     parser = argparse.ArgumentParser("Finetuning tests")
     parser.add_argument("--model_file")
@@ -427,30 +442,32 @@ def eval_model(model, valid_loader, test=False, verbose=False):
     return preds, targs
 
 
-def get_dataset(batch_size, num_workers, data_path, signal_fs, train_records, validation_records, test_records, apply_noise=False, t_params=None, test=False, normalize=False):
+def get_dataset(batch_size, num_workers, data_path, signal_fs, train_records, validation_records, test_records, apply_noise=False, t_params=None, test=False, normalize=False, mode="linear_evaluation"):
     # when test=True, the wrapper returns train, test instead of train, validation
     if apply_noise:
         transformations = ["BaselineWander", "PowerlineNoise", "EMNoise", "BaselineShift"]
         if normalize:
             transformations.append("Normalize")
         dataset = SimCLRDataSetWrapper(batch_size, num_workers, data_path, signal_fs, train_records, validation_records, test_records,
-                                            mode="linear_evaluation", transformations=transformations, t_params=t_params, test=test)
+                                            mode=mode, transformations=transformations, t_params=t_params, test=test)
     else:
         if normalize:
-            # always use PTB-XL stats
             transformations = ["Normalize"]
             dataset = SimCLRDataSetWrapper(batch_size, num_workers, data_path, signal_fs, train_records, validation_records, test_records,
-                                                mode="linear_evaluation", transformations=transformations, test=test)
+                                                mode=mode, transformations=transformations, test=test)
         else:
             # dataset = SimCLRDataSetWrapper(batch_size,num_workers,None,"(12, 250)",None,data_path,[data_path],None,None,
             #                                mode="linear_evaluation", percentage=percentage, folds=folds, test=test, ptb_xl_label="label_all")
             dataset = SimCLRDataSetWrapper(batch_size, num_workers, data_path, signal_fs, train_records, validation_records, test_records,
-                                                mode="linear_evaluation", transformations=None, test=test)
+                                                mode=mode, transformations=None, test=test)
  
     train_loader, valid_loader = dataset.get_data_loaders()
     return dataset, train_loader, valid_loader
 
 if __name__ == "__main__":
+    # set seed for determinstic reproducibility
+    set_seed(42)
+
     args = parse_args()
     
     # load config from checkpoint folder or fall back to default config
@@ -484,8 +501,8 @@ if __name__ == "__main__":
     print(f"Loaded datasets - Train: {len(train_loader.dataset)}, Valid: {len(valid_loader.dataset)}, Test: {len(test_loader.dataset)}")
 
     # create prefix tag for saved model and results
-    tag = args.tag if args.use_pretrained else "ran_" + args.tag
-    tag = "eval_" + tag if args.eval_only else tag
+    tag = args.tag if args.use_pretrained else "_ran" + args.tag
+    tag = "_eval" + tag if args.eval_only else tag
 
     if args.test_noised:
         t_params_by_level = {
@@ -517,9 +534,10 @@ if __name__ == "__main__":
     finetune_str = "_finetuned" if args.f_epochs > 0 else ""
     
     _, mid, run_suffix = run_folder.name.partition(args.method)
-    run_name = mid + run_suffix
-    run_name += linear_str
-    run_name += finetune_str
+    run_name = mid + run_suffix + tag
+    if not args.eval_only:
+        run_name += linear_str
+        run_name += finetune_str
     name = time.strftime("%d-%m-%Y-%H-%M") + '_' + run_name
 
     eval_log_folder = os.path.join(args.log_dir, name)
@@ -528,13 +546,14 @@ if __name__ == "__main__":
     # init tensorboard
     tb_writer = SummaryWriter(log_dir=eval_log_folder)
     
-    # set checkpoint and results locations
+    # set checkpoint and results locations and do not include eval_only in results name
     save_model_at = os.path.join(eval_log_folder, "checkpoints")
-    if args.f_epochs == 0:  # only head-only training (linear evaluation)
+    if args.f_epochs == 0 and not args.eval_only:  # only head-only training (linear evaluation)
         # os.path.dirname(args.model_file) is checkpoints folder
         results_filename = os.path.join(eval_log_folder, "result_linear.pkl")
     else:
         results_filename = os.path.join(eval_log_folder, "result_finetuned.pkl")
+
 
     # load model state dict and configure the optimizer
     model = load_model(
@@ -593,7 +612,7 @@ if __name__ == "__main__":
 
     else:
         # return preds, macro_auc, macro_f1, macro_auc_agg, macro_f1_agg, targs
-        test_preds, eval_macro_auc, eval_macro_f1, eval_macro_auc_agg, eval_macro_f1_agg, test_ytrue = evaluate(model, test_loader)
+        test_preds, eval_macro_auc, eval_macro_f1, eval_macro_auc_agg, eval_macro_f1_agg, test_ytrue = evaluate(model, test_loader, test=True, verbose=args.verbose)
         test_macros.append(eval_macro_f1)
         test_macros_agg.append(eval_macro_f1_agg)
         if args.verbose:
@@ -606,6 +625,10 @@ if __name__ == "__main__":
     if args.f_epochs != 0:
         predss.append((val_preds_fin, test_preds_fin))
         true_labels.append((val_ytrue_fin, test_ytrue_fin))
+
+    if args.eval_only:
+        predss.append(([], test_preds))
+        true_labels.append(([], test_ytrue))
 
     if noise_valid_loader is not None:
         _, _, noise_macro_f1, _, noise_macrof1__agg = evaluate(model, noise_valid_loader)

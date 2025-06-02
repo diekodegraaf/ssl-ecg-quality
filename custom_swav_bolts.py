@@ -28,6 +28,19 @@ from clinical_ts.simclr_dataset_wrapper import transformations_from_strings
 from ecg_datamodule import ECGDataModule
 from online_evaluator import SSLOnlineEvaluator
 from models.resnet_simclr import ResNetSimCLR
+import random
+
+def set_seed(seed: int = 42):
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"  
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    print('Setting seed to', seed)
 
 
 logger = create_logger(__name__)

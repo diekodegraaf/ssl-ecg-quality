@@ -24,7 +24,7 @@ class TrainDataset(Dataset):
         self.records = records
         self.fs = signal_fs
         self.window_size = window_size
-        self.stride = stride or self.window_size
+        self.stride = stride or self.window_size 
         self.mode = mode
         self.transforms = transforms
         self.windows = []
@@ -198,7 +198,7 @@ class AnnotatedDataset(Dataset):
         
         # For each class, sample min_count rows (using a fixed seed for reproducibility).
         df_balanced = pd.concat([
-            group.sample(n=min_count if len(group) == min_count else 5 * min_count, random_state=seed)
+            group.sample(n=min_count if len(group) == min_count else 1 * min_count, random_state=seed)
             for _, group in df.groupby('label')
         ])
               

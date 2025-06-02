@@ -40,6 +40,20 @@ from ecg_datamodule import ECGDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from pl_bolts.models.self_supervised.evaluator import Flatten
 import pdb
+import random
+
+def set_seed(seed: int = 42):
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"  
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    print('Setting seed to', seed)
+
 method="simclr"
 logger = create_logger(__name__)
 def _accuracy(zis, zjs, batch_size):

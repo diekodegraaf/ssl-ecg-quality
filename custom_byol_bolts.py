@@ -37,6 +37,20 @@ from online_evaluator import SSLOnlineEvaluator
 from ecg_datamodule import ECGDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 import pdb
+import random
+import numpy as np
+
+def set_seed(seed: int = 42):
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"  
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    print('Setting seed to', seed)
 
 logger = create_logger(__name__)
 method="byol"
@@ -472,6 +486,7 @@ def cli_main():
     from os.path import exists
     from pytorch_lightning.callbacks import ModelCheckpoint
 
+    set_seed(42)
     
     parser = ArgumentParser()
     parser = parse_args(parser)

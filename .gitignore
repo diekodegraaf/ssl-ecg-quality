@@ -6,6 +6,8 @@ data
 # Ignore the log folders
 experiment_logs/
 evaluation_logs/
+# Ignore slurm outputs
+job_outputs/
 
 # Ignore the fully pre-trained or evaluated checkpoints 
 pretrained_models/
@@ -15,10 +17,18 @@ finished_models/
 # Ignore Python cache files
 __pycache__/
 
-# Ignore slurm outputs
-job_outputs/
 
 # Ignore the profiler.txt file
-fit-simple_profiler2.txt.txt
-fit-simple_profiler3.txt.txt
-simple_profiler.txt
+fit-simple_profiler.txt
+
+# pycache
+__pycache__
+
+# results files
+# finetune_results.csv
+# linear_evaluation_results.csv
+
+# temp notebooks and files
+butqdb_preprocessing/
+fixing_models.ipynb
+swav1D_colab.ipynb

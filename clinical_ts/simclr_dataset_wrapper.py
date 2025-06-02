@@ -10,11 +10,16 @@ try:
     import pickle5 as pickle
 except ImportError as e:
     import pickle
-
+import random
+import torch
 from .timeseries_transformations import GaussianNoise, RandomResizedCrop, ChannelResize, Negation, DynamicTimeWarp, DownSample, TimeWarp, TimeOut, ToTensor, BaselineWander, PowerlineNoise, EMNoise, BaselineShift, TGaussianNoise, TRandomResizedCrop, TChannelResize, TNegation, TDynamicTimeWarp, TDownSample, TTimeOut, TBaselineWander, TPowerlineNoise, TEMNoise, TBaselineShift, TGaussianBlur1d, TNormalize, Transpose
 
 logger = create_logger(__name__)
 
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
 
 def transformations_from_strings(transformations, t_params):
     if transformations is None:
@@ -111,12 +116,12 @@ class SimCLRDataSetWrapper(object):
             train_ds = TrainDataset(self.data_path, self.train_records, self.window_size, self.signal_fs, transforms=transforms, stride=None, mode='random')
         elif self.mode == "linear_evaluation":
             # load train data (subset of unsupervised pretraining set) with labels for linear evaluation/fine-tuning
-            train_ds = AnnotatedDataset(self.data_path, self.train_records, self.window_size, self.signal_fs, transforms=transforms, stride=None, mode='random', onehot_label=True)
+            train_ds = AnnotatedDataset(self.data_path, self.train_records, self.window_size, self.signal_fs, transforms=transforms, stride=None, mode='random', onehot_label=True, balanced_classes=False)
         # if test is true, load the test data instead of the validation data
         if not self.test:
-            val_ds = AnnotatedDataset(self.data_path, self.val_records, self.window_size, self.signal_fs, transforms=transforms, stride=None, onehot_label=True)
+            val_ds = AnnotatedDataset(self.data_path, self.val_records, self.window_size, self.signal_fs, transforms=transforms, stride=None, onehot_label=True, balanced_classes=False)
         else:
-            val_ds = AnnotatedDataset(self.data_path, self.test_records, self.window_size, self.signal_fs, transforms=transforms, stride=None, onehot_label=True)
+            val_ds = AnnotatedDataset(self.data_path, self.test_records, self.window_size, self.signal_fs, transforms=transforms, stride=None, onehot_label=True, balanced_classes=False)
         return train_ds, val_ds
 
     def _get_simclr_pipeline_transform(self):
@@ -126,9 +131,9 @@ class SimCLRDataSetWrapper(object):
 
     def get_train_validation_data_loaders(self, train_ds, val_ds):
         train_loader = DataLoader(train_ds, batch_size=self.batch_size,
-                                  num_workers=self.num_workers, pin_memory=True, shuffle=True, drop_last=True)
+                                  num_workers=self.num_workers, pin_memory=True, shuffle=True, drop_last=True, worker_init_fn=seed_worker)
         val_loader = DataLoader(val_ds, batch_size=self.batch_size,
-                                shuffle=False, num_workers=self.num_workers, pin_memory=True)
+                                shuffle=False, num_workers=self.num_workers, pin_memory=True, worker_init_fn=seed_worker)
         # print("\n"*5)
         # print('trainloader size:', len(train_loader))
         # print('valloder size:', len(val_loader))

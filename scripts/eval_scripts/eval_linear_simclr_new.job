@@ -1,0 +1,81 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=2
+#SBATCH --job-name=LE_SimCLR
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=36
+#SBATCH --time=15:00:00
+#SBATCH --output=job_outputs/eval_linear_simclr_full.out
+# %j = jobid
+
+module purge
+module load 2024
+module load Anaconda3/2024.06-1
+
+cd "$HOME/ssl-ecg-quality/"
+source activate ecg
+# cp -r "$HOME/ssl-ecg-quality/data/but-qdb/" "$TMPDIR"
+
+# Common evaluation parameters
+METHOD="simclr"
+BATCH_SIZE=4096
+L_EPOCHS=50
+COMMON_ARGS="--method $METHOD --use_pretrained --linear_evaluation --batch_size $BATCH_SIZE --l_epochs $L_EPOCHS --discriminative_lr --log_dir evaluation_logs"
+
+# Function to run evaluation
+run_eval() {
+    local MODEL_FILE=$1
+    if [[ -f "$MODEL_FILE" ]]; then
+        srun python eval.py $COMMON_ARGS --model_file "$MODEL_FILE"
+    else
+        echo "Warning: Model file '$MODEL_FILE' not found. Skipping."
+    fi
+}
+
+##########################################
+# Dynamic Time Warp evaluations
+##########################################
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-13-44_simclr_DTW_w=3_r=5/checkpoints/best_pretrained_simclr_DTW_w=3_r=5_epoch=137-val_loss=7.5215.ckpt"
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-15-03_simclr_DTW_w=1_r=10/checkpoints/best_pretrained_simclr_DTW_w=1_r=10_epoch=130-val_loss=7.4694.ckpt"
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-15-54_simclr_DTW_w=3_r=10/checkpoints/best_pretrained_simclr_DTW_w=3_r=10_epoch=149-val_loss=7.4419.ckpt"
+
+##########################################
+# Time Out evaluations
+##########################################
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-17-13_simclr_TO_crop_ratio_range=[0.4, 0.5]/checkpoints/best_pretrained_simclr_TO_crop_ratio_range=[0.4, 0.5]_epoch=131-val_loss=7.3493.ckpt"
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-17-57_simclr_TO_crop_ratio_range=[0.1, 0.2]/checkpoints/best_pretrained_simclr_TO_crop_ratio_range=[0.1, 0.2]_epoch=148-val_loss=7.4442.ckpt"
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-18-42_simclr_TO_crop_ratio_range=[0.0, 0.5]/checkpoints/best_pretrained_simclr_TO_crop_ratio_range=[0.0, 0.5]_epoch=136-val_loss=7.3895.ckpt"
+
+##########################################
+# Gaussian Noise evaluations
+##########################################
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-19-27_simclr_GN_var=0.01/checkpoints/best_pretrained_simclr_GN_var=0.01_epoch=138-val_loss=7.4839.ckpt"
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-20-32_simclr_GN_var=0.1/checkpoints/best_pretrained_simclr_GN_var=0.1_epoch=139-val_loss=7.4344.ckpt"
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-21-17_simclr_GN_var=1.0/checkpoints/best_pretrained_simclr_GN_var=1.0_epoch=23-val_loss=7.4983.ckpt"
+
+##########################################
+# Channel Resize evaluations
+##########################################
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-22-04_simclr_ChR_magnitude_range=[0.33, 1.0]/checkpoints/best_pretrained_simclr_ChR_magnitude_range=[0.33, 1.0]_epoch=128-val_loss=7.4581.ckpt"
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-22-52_simclr_ChR_magnitude_range=[0.33, 3.0]/checkpoints/best_pretrained_simclr_ChR_magnitude_range=[0.33, 3.0]_epoch=140-val_loss=7.5377.ckpt"
+run_eval "finished_models/pretrained_models_simclr/25-04-2025-23-41_simclr_ChR_magnitude_range=[0.5, 2.0]/checkpoints/best_pretrained_simclr_ChR_magnitude_range=[0.5, 2.0]_epoch=50-val_loss=7.4873.ckpt"
+
+##########################################
+# EM Noise evaluations
+##########################################
+run_eval "finished_models/pretrained_models_simclr/26-04-2025-00-29_simclr_EM_var=0.5/checkpoints/best_pretrained_simclr_EM_var=0.5_epoch=93-val_loss=7.4970.ckpt"
+run_eval "finished_models/pretrained_models_simclr/26-04-2025-01-15_simclr_EM_var=0.01/checkpoints/best_pretrained_simclr_EM_var=0.01_epoch=41-val_loss=7.5007.ckpt"
+run_eval "finished_models/pretrained_models_simclr/26-04-2025-02-01_simclr_EM_var=1.0/checkpoints/best_pretrained_simclr_EM_var=1.0_epoch=144-val_loss=7.4488.ckpt"
+
+##########################################
+# Negation evaluation
+##########################################
+run_eval "finished_models/pretrained_models_simclr/26-04-2025-02-46_simclr_Neg_True/checkpoints/best_pretrained_simclr_Neg_True_epoch=146-val_loss=7.4607.ckpt"
+
+##########################################
+# Baseline Wander evaluations
+##########################################
+run_eval "finished_models/pretrained_models_simclr/26-04-2025-03-30_simclr_BlW_fs=100_C=0.1/checkpoints/best_pretrained_simclr_BlW_fs=100_C=0.1_epoch=38-val_loss=7.5280.ckpt"
+run_eval "finished_models/pretrained_models_simclr/26-04-2025-05-27_simclr_BlW_fs=100_C=0.7/checkpoints/best_pretrained_simclr_BlW_fs=100_C=0.7_epoch=113-val_loss=7.5222.ckpt"
+run_eval "finished_models/pretrained_models_simclr/26-04-2025-07-23_simclr_BlW_fs=100_C=1.0/checkpoints/best_pretrained_simclr_BlW_fs=100_C=1.0_epoch=137-val_loss=7.4951.ckpt"
